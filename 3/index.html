@@ -225,30 +225,6 @@
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
 
-        function drawSceneOnCubeScreen() {
-            gl.viewport(0, 0, rttFramebuffer.width, rttFramebuffer.height);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            mat4.perspective(45, rttFramebuffer, 0.1, 100.0, pMatrix);
-
-            mat4.identity(mvMatrix);
-
-            mat4.translate(mvMatrix, [0, 0, -5]);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-            gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize,
-                    gl.FLOAT, false, 0, 0);
-            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
-            gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, squareVertexTextureCoordBuffer.itemSize,
-                    gl.FLOAT, false, 0, 0);
-            setMatrixUniforms();
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
-
-            gl.bindTexture(gl.TEXTURE_2D, rttTexture);
-            gl.generateMipmap(gl.TEXTURE_2D);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        }
-
 
         var mvMatrix = mat4.create();
         var mvMatrixStack = [];
