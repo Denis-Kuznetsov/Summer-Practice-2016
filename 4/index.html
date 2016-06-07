@@ -1,0 +1,129 @@
+<html>
+<head>
+
+</head>
+<body>
+<canvas id="render_canvas" style="border: none;" width="2000" height="1000"></canvas>
+
+<script src="three.js"></script>
+<script src="Stats.js"></script>
+<script>
+    var canvas = document.getElementById("render_canvas");
+    canvas.addEventListener("wheel", onWheel);
+    canvas.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    canvas.addEventListener("mousedown", handleMouseDown);
+    var mouseX = 0, mouseY = 0;
+    var mouseDown = 0;
+    var deltaX = 0, deltaY = 0;
+    var delta = 0;
+    var CamX = 0, CamY = 0, CamS = 1;
+
+    var container = document.createElement( 'body' );
+    document.body.appendChild( container );
+
+    var stats = new Stats();
+    container.appendChild( stats.dom );
+
+    var start = Date.now();
+    var scene = new THREE.Scene();
+    var sceneCube = new THREE.Scene();
+    var render_canvas = document.getElementById("render_canvas");
+    var camera = new THREE.PerspectiveCamera( 75, render_canvas.width / render_canvas.height, 0.1, 1000 );
+    var cameraCube = new THREE.PerspectiveCamera( 75, render_canvas.width / render_canvas.height, 0.1, 100 );
+
+    var renderer = new THREE.WebGLRenderer( {canvas : render_canvas, antialias: true });
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.autoClear = false;
+
+    var geometry = new THREE.BoxGeometry( 2, 2, 2 );
+
+    var format = '.jpg';
+    var urls = [
+        'XP' + format, 'XN' + format,
+        'YP' + format, 'YN' + format,
+        'ZP' + format, 'ZN' + format
+    ];
+
+    var reflectionCube = new THREE.CubeTextureLoader().load( urls );
+    reflectionCube.format = THREE.RGBFormat;
+
+    var cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );
+
+    var sphere = new THREE.Mesh( new THREE.SphereGeometry( 2, 32, 32 ), cubeMaterial );
+
+    var ambient = new THREE.AmbientLight( 0xffffff );
+    scene.add( ambient );
+
+    var light = new THREE.PointLight(0xffffff);
+    light.position.set(3, 3, 7);
+    scene.add(light);
+
+    scene.add(sphere);
+
+    var shader = THREE.ShaderLib[ "cube" ];
+    shader.uniforms[ "tCube" ].value = reflectionCube;
+
+    var material = new THREE.ShaderMaterial( {
+                fragmentShader: shader.fragmentShader,
+                vertexShader: shader.vertexShader,
+                uniforms: shader.uniforms,
+                depthWrite: false,
+                side: THREE.BackSide
+            } ),
+            mesh = new THREE.Mesh( new THREE.BoxGeometry( 5, 5, 5 ), material );
+    sceneCube.add( mesh );
+
+    camera.position.z = 5;
+    function render() {
+        requestAnimationFrame( render );
+
+        camera.position.x = CamS * Math.cos(CamX) * Math.sin(CamY);
+        camera.position.y = CamS * Math.cos(CamY);
+        camera.position.z = CamS * Math.sin(CamX) * Math.sin(CamY);
+        camera.lookAt( scene.position );
+        cameraCube.rotation.copy( camera.rotation );
+
+        renderer.render( sceneCube, cameraCube );
+        renderer.render( scene, camera );
+        stats.update();
+    }
+    render();
+
+    function handleMouseDown(event) {
+        mouseDown = true;
+    }
+
+    function handleMouseUp(event) {
+        mouseDown = false;
+    }
+
+    function handleMouseMove(event) {
+        if (mouseDown) {
+            var newX = event.clientX;
+            var newY = event.clientY;
+
+            deltaX = newX - mouseX;
+            deltaY = newY - mouseY;
+
+            CamX += deltaX / 100.0;
+            CamY += deltaY / 100.0;
+        }
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+    }
+
+
+    function onWheel(event) {
+        event = event || window.event;
+        delta = event.deltaY || event.detail || event.wheelDelta;
+
+        CamS += delta / 100.0;
+
+        event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+    }
+
+</script>
+
+</body>
+</html>
